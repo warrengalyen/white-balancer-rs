@@ -4,5 +4,7 @@ version = "0.1.0"
 authors = ["Warren Galyen <warrengalyen@github.com>"]
 
 [dependencies]
+clap = "2.33.3"
 image = "0.23.12" 
 num-traits = "0.2.14"
+
