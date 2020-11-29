@@ -2,6 +2,12 @@
 name = "white-balancer"
 version = "0.1.0"
 authors = ["Warren Galyen <warrengalyen@github.com>"]
+description = "Implementation of auto white balance methods"
+homepage = "https://github.com/warrengalyen/white-balancer-rs"
+repository = "https://github.com/warrengalyen/white-balancer-rs"
+license = "MIT"
+readme = "README.md"
+keywords = ["image", "processing", "white", "balance"]
 
 [dependencies]
 clap = "2.33.3"
