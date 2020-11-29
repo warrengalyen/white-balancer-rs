@@ -2,7 +2,6 @@ extern crate image;
 extern crate clap;
 extern crate white_balancer;
 
-use std::fs::File;
 use std::path::Path;
 
 use white_balancer::traits::AutoWhiteBalance;
@@ -33,6 +32,13 @@ fn main() {
             .takes_value(true)
             .required(false)
         )
+        .arg(clap::Arg::with_name("all-methods")
+        .help("use all methods")
+        .short("a")
+        .long("all")
+        .takes_value(false)
+        .required(false)
+    )
         .get_matches ();
 
         let input_filename = matches.value_of("input").unwrap();
@@ -46,21 +52,28 @@ fn main() {
             }
         };
 
-        println!("Auto white balancing:");
-        println!("\tMethod: {}", method);
-        println!("\tInput: {}", input_filename);
-        println!("\tOutput: {}", output_filename);
+        let input_image = image::open(&input_filename)
+            .unwrap();
+        let rgb_image = input_image.to_rgb8();
+        let (width, height) = rgb_image.dimensions();
 
-        let original_image = image::open(&input_filename)
-        .unwrap();
-    let orig_rgb = original_image.to_rgb();
-    let enhanced_image = match method {
-        "gray-world" => {
-            Some(white_balancer::GrayWorld::white_balance(&orig_rgb))
-        },
-        _ => {
-            eprintln!("Auto white balancing method '{}' not found", method);
-            None
+        println!("Auto white balancing:");
+        println!("\tInput: {} ({}x{})", input_filename, width, height);
+        println!("\tOutput: {} -> {}", method, output_filename);
+
+        let enhanced_image = match method {
+            "gray-world" => {
+                Some(white_balancer::GrayWorld::white_balance(&rgb_image))
+            },
+            "retinex" => {
+                Some(white_balancer::Retinex::white_balance(&rgb_image))
+            },
+            "gray-retinex" => {
+                Some(white_balancer::GrayRetinex::white_balance(&rgb_image))
+            },
+            _ => {
+                eprintln!("Auto white balancing method '{}' not found", method);
+                None
         }
     };
 
