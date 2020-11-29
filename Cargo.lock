@@ -598,7 +598,7 @@ checksum = "3e2bb9fc8309084dd7cd651336673844c1d47f8ef6d2091ec160b27f5c4aa277"
 
 [[package]]
 name = "white-balancer"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clap",
  "image",

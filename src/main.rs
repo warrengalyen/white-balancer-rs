@@ -4,7 +4,7 @@ extern crate white_balancer;
 
 use std::path::Path;
 
-use white_balancer::traits::AutoWhiteBalance;
+use white_balancer::{AutoWhiteBalance, AutoWhiteBalanceMethod};
 
 fn main() {
     let matches = clap::App::new("white-balancer")
@@ -23,67 +23,74 @@ fn main() {
             .short("o")
             .long("output")
             .takes_value(true)
-            .required(true)
+            .required(false)
         )
-        .arg(clap::Arg::with_name("method")
-            .help("white balancing method")
+        .arg(clap::Arg::with_name("auto")
+            .help("white balancing auto")
             .short("m")
-            .long("method")
+            .long("auto")
             .takes_value(true)
             .required(false)
         )
         .arg(clap::Arg::with_name("all-methods")
-        .help("use all methods")
-        .short("a")
-        .long("all")
-        .takes_value(false)
-        .required(false)
-    )
+            .help("use all methods")
+            .short("a")
+            .long("all")
+            .takes_value(false)
+            .required(false)
+        )
         .get_matches ();
 
-        let input_filename = matches.value_of("input").unwrap();
-        let output_filename = matches.value_of("output").unwrap();
-        let method = match matches.value_of("method") {
-            Some(method) => {
-                method
-            },
-            None => {
-                "gray-world"
+    let input_filename = matches.value_of("input").unwrap();
+    if !filename_has_extension(input_filename) {
+        eprintln!("Filename does not have an extension.");
+        return;
+    }
+
+    let method = match matches.value_of("auto") {
+        Some(method_str) => {
+            match method_str {
+                "gray-world" => Some(AutoWhiteBalanceMethod::GrayWorld),
+                "retinex" => Some(AutoWhiteBalanceMethod::Retinex),
+                "gray-retinex" => Some(AutoWhiteBalanceMethod::GrayRetinex),
+                _ => {
+                    eprintln!("Auto white balancing auto '{}' not found", method_str);
+                    return;
+                }
             }
-        };
-
-        let input_image = image::open(&input_filename)
-            .unwrap();
-        let rgb_image = input_image.to_rgb8();
-        let (width, height) = rgb_image.dimensions();
-
-        println!("Auto white balancing:");
-        println!("\tInput: {} ({}x{})", input_filename, width, height);
-        println!("\tOutput: {} -> {}", method, output_filename);
-
-        let enhanced_image = match method {
-            "gray-world" => {
-                Some(white_balancer::GrayWorld::white_balance(&rgb_image))
-            },
-            "retinex" => {
-                Some(white_balancer::Retinex::white_balance(&rgb_image))
-            },
-            "gray-retinex" => {
-                Some(white_balancer::GrayRetinex::white_balance(&rgb_image))
-            },
-            _ => {
-                eprintln!("Auto white balancing method '{}' not found", method);
-                None
+        },
+        None => {
+            Some(AutoWhiteBalanceMethod::GrayWorld)
         }
-    };
+    }.unwrap();
 
-    match enhanced_image {
-        Some(enh_image) => {
-            image::DynamicImage::ImageRgb8(enh_image).save(&Path::new(output_filename))
-                .unwrap();
-            },
-            None => {
-                eprintln!("Failed to convert with method: '{}'", method);
+    let input_image = image::open(&input_filename).unwrap();
+    let rgb_image = input_image.to_rgb8();
+    let (width, height) = rgb_image.dimensions();
+
+    println!("Auto white balancing:");
+    println!("\tInput: {} ({}x{})", input_filename, width, height);
+
+    let output_filename: String = build_output_filename(input_filename,
+                                                        matches.value_of("output"),
+                                                        &method);
+    println!("\tOutput: {} -> {}", method, output_filename);
+    let enhanced_image = rgb_image.auto_white_balance(method);
+    image::DynamicImage::ImageRgb8(enhanced_image).save(&Path::new(&output_filename)).unwrap();
+}
+
+fn filename_has_extension(filename: &str) -> bool {
+    let split: Vec<&str> = filename.rsplitn(2, ".").collect();
+    split.len() == 2
+}
+fn build_output_filename(input_filename: &str,
+                         output_filename: Option<&str>,
+                         method: &AutoWhiteBalanceMethod) -> String {
+    match output_filename {
+        Some(filename) => String::from(filename),
+        None => {
+            let string_split: Vec<&str> = input_filename.rsplitn(2,".").collect();
+            format!("{}-{}.{}", string_split[1], method.to_string(), string_split[0])
         }
     }
 }
