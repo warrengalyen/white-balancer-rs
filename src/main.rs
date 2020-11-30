@@ -57,15 +57,7 @@ fn main() {
     let all_methods = matches.is_present("all");
     let user_method = match matches.value_of("auto") {
         Some(method_str) => {
-            match method_str {
-                "gray-world" => Some(AutoWhiteBalanceMethod::GrayWorld),
-                "retinex" => Some(AutoWhiteBalanceMethod::Retinex),
-                "gray-retinex" => Some(AutoWhiteBalanceMethod::GrayRetinex),
-                _ => {
-                    eprintln!("Auto white balancing auto '{}' not found", method_str);
-                    return;
-                }
-            }
+            AutoWhiteBalanceMethod::try_from(method_str).ok()
         },
         None => {
             if !all_methods {
@@ -77,6 +69,7 @@ fn main() {
     };
 
     match user_method {
+
         Some(method) => {
             do_auto_white_balance_for_method(input_filename,
                                              matches.value_of("output"),
@@ -84,18 +77,12 @@ fn main() {
                                              &rgb_image);
         },
         None => {
-            do_auto_white_balance_for_method(input_filename,
-                                             None,
-                                             &AutoWhiteBalanceMethod::GrayWorld,
-                                             &rgb_image);
-            do_auto_white_balance_for_method(input_filename,
-                                             None,
-                                             &AutoWhiteBalanceMethod::Retinex,
-                                             &rgb_image);
-            do_auto_white_balance_for_method(input_filename,
-                                             None,
-                                             &AutoWhiteBalanceMethod::GrayRetinex,
-                                             &rgb_image);
+            for method in AutoWhiteBalanceMethod::iter() {
+                do_auto_white_balance_for_method(input_filename,
+                                                 None,
+                                                 &method,
+                                                 &rgb_image);
+            };
         }
     }
 }
