@@ -88,7 +88,7 @@ impl<P, S, C> PixelStats<S> for ImageBuffer<P, C>
             }
         }
 
-        for idx in 0..P::channel_count() {
+        for idx in 0..P::CHANNEL_COUNT {
             res[idx as usize] = (res[idx as usize] / (pixel_count - 1f32)).sqrt();
         }
 

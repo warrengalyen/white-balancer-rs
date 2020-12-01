@@ -27,7 +27,6 @@ pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
 #[cfg(test)]
 mod gray_test {
     use super::*;
-    use rand::{thread_rng, Rng};
 
     #[test]
     fn test_equal_resolution() {

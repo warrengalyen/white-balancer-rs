@@ -1,46 +1,50 @@
-extern crate image;
 extern crate clap;
+extern crate image;
 extern crate white_balancer;
 
 use std::path::Path;
 
-use white_balancer::{AutoWhiteBalance, AutoWhiteBalanceMethod};
 use white_balancer::image_format_from_string;
+use white_balancer::{AutoWhiteBalance, AutoWhiteBalanceMethod};
 
 fn main() {
     let matches = clap::App::new("white-balancer")
         .version("0.1.0")
         .author("Warren Galyen <warrengalyen@github.com>")
         .about("Automatic white balance for images")
-        .arg(clap::Arg::with_name("input")
-            .help("input image filename")
-            .short("i")
-            .long("input")
-            .takes_value(true)
-            .required(true)
+        .arg(
+            clap::Arg::with_name("input")
+                .help("input image filename")
+                .short("i")
+                .long("input")
+                .takes_value(true)
+                .required(true),
         )
-        .arg(clap::Arg::with_name("output")
-            .help("output image filename")
-            .short("o")
-            .long("output")
-            .takes_value(true)
-            .required(false)
+        .arg(
+            clap::Arg::with_name("output")
+                .help("output image filename")
+                .short("o")
+                .long("output")
+                .takes_value(true)
+                .required(false),
         )
-        .arg(clap::Arg::with_name("auto")
-            .help("white balancing auto")
-            .short("m")
-            .long("auto")
-            .takes_value(true)
-            .required(false)
+        .arg(
+            clap::Arg::with_name("auto")
+                .help("white balancing auto")
+                .short("m")
+                .long("auto")
+                .takes_value(true)
+                .required(false),
         )
-        .arg(clap::Arg::with_name("all")
-            .help("use all methods")
-            .short("a")
-            .long("all")
-            .required(false)
-            .conflicts_with_all(&["auto", "output"])
+        .arg(
+            clap::Arg::with_name("all")
+                .help("use all methods")
+                .short("a")
+                .long("all")
+                .required(false)
+                .conflicts_with_all(&["auto", "output"]),
         )
-        .get_matches ();
+        .get_matches();
 
     let input_filename = matches.value_of("input").unwrap();
     if !filename_has_extension(input_filename) {
@@ -57,60 +61,80 @@ fn main() {
 
     let all_methods = matches.is_present("all");
     let user_method = match matches.value_of("auto") {
-        Some(method_str) => {
-            AutoWhiteBalanceMethod::try_from(method_str).ok()
-        },
+        Some(method_str) => AutoWhiteBalanceMethod::try_from(method_str).ok(),
         None => {
             if !all_methods {
                 eprintln!("Please select auto white balance method");
                 return;
             }
             None
-        },
+        }
     };
 
     match user_method {
-
         Some(method) => {
-            do_auto_white_balance_for_method(input_filename,
-                                             matches.value_of("output"),
-                                             &method,
-                                             &rgb_image);
-        },
+            do_auto_white_balance_for_method(
+                input_filename,
+                matches.value_of("output"),
+                &method,
+                &rgb_image,
+            );
+        }
         None => {
             for method in AutoWhiteBalanceMethod::iter() {
-                do_auto_white_balance_for_method(input_filename,
-                                                 None,
-                                                 &method,
-                                                 &rgb_image);
-            };
+                do_auto_white_balance_for_method(input_filename, None, &method, &rgb_image);
+            }
         }
     }
 }
 
-fn do_auto_white_balance_for_method(input_filename: &str,
+fn do_auto_white_balance_for_method(
+    input_filename: &str,
     output_filename: Option<&str>,
     method: &AutoWhiteBalanceMethod,
-    rgb_image: &image::RgbImage) {
-
-    let (output_filename) = build_output_filename(input_filename, output_filename, &method);
+    rgb_image: &image::RgbImage,
+) {
+    let (output_filename, _image_format) = build_output_filename(input_filename, output_filename, &method);
     println!("\tOutput: {} -> {}", method, output_filename);
     let enhanced_image = rgb_image.auto_white_balance(&method);
-    image::DynamicImage::ImageRgb8(enhanced_image).save(&Path::new(&output_filename));
+    let fout = Path::new(&output_filename);
+    image::DynamicImage::ImageRgb8(enhanced_image)
+        .save(fout)
+        .unwrap();
 }
 
 fn filename_has_extension(filename: &str) -> bool {
     let split: Vec<&str> = filename.rsplitn(2, ".").collect();
     split.len() == 2
 }
-fn build_output_filename(input_filename: &str,
-                         output_filename: Option<&str>,
-                         method: &AutoWhiteBalanceMethod) -> String {
-    match output_filename {
-        Some(filename) => String::from(filename),
+
+fn build_output_filename(
+    input_filename: &str,
+    output_filename: Option<&str>,
+    method: &AutoWhiteBalanceMethod,
+) -> (String, image::ImageFormat) {
+    let string_split: Vec<&str> = input_filename.rsplitn(2, ".").collect();
+    let image_format = match image_format_from_string(string_split[0]) {
+        Some(format) => format,
         None => {
-            let string_split: Vec<&str> = input_filename.rsplitn(2,".").collect();
-            format!("{}-{}.{}", string_split[1], method.to_string(), string_split[0])
+            eprintln!(
+                "Did not find image format for '{}', using PNG as default",
+                string_split[0]
+            );
+            image::ImageFormat::Png
         }
+    };
+
+    match output_filename {
+        Some(filename) => (String::from(filename), image_format),
+        None => (
+            format!(
+                "{}-{}.{}",
+                string_split[1],
+                method.to_string(),
+                string_split[0]
+            ),
+            image_format,
+        ),
     }
 }

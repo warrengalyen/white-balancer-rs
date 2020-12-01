@@ -3,13 +3,10 @@ extern crate num_traits;
 extern crate nalgebra;
 
 use image::Pixel;
-use image::math::utils::clamp;
+use num_traits::clamp;
 use self::nalgebra::Matrix2;
 
 use ::image_ext::PixelMath;
-
-use rand::Rng;
-use rand::thread_rng;
 
 fn resolve_matrix(a: Matrix2<f32>, c1: f32, c2: f32) -> (f32, f32) {
     let det = a.determinant();
@@ -67,7 +64,6 @@ pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use rand::{thread_rng, Rng};
+
 
 }

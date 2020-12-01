@@ -1,6 +1,6 @@
- white-balancer
+ # white-balancer
 
-Rust implementation of popular white balancing methods.
+Rust implementation of popular auto white balancing methods.
 
 ## Usage
 
