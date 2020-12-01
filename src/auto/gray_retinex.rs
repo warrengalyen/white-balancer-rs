@@ -6,7 +6,7 @@ use image::Pixel;
 use image::math::utils::clamp;
 use self::nalgebra::Matrix2;
 
-use ::math::PixelMath;
+use image_ext::math::PixelMath;
 
 fn resolve_matrix(a: Matrix2<f64>, c1: f64, c2: f64) -> (f64, f64) {
     let det = a.determinant();
