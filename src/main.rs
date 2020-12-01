@@ -5,7 +5,7 @@ extern crate white_balancer;
 use std::path::Path;
 
 use white_balancer::{AutoWhiteBalance, AutoWhiteBalanceMethod};
-use white_balancer::image_ext::imageformat::image_format_from_string;
+use white_balance::image_format_from_string;
 
 fn main() {
     let matches = clap::App::new("white-balancer")
