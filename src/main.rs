@@ -5,6 +5,7 @@ extern crate white_balancer;
 use std::path::Path;
 
 use white_balancer::{AutoWhiteBalance, AutoWhiteBalanceMethod};
+use white_balancer::image_ext::imageformat::image_format_from_string;
 
 fn main() {
     let matches = clap::App::new("white-balancer")
@@ -92,10 +93,10 @@ fn do_auto_white_balance_for_method(input_filename: &str,
     method: &AutoWhiteBalanceMethod,
     rgb_image: &image::RgbImage) {
 
-    let output_filename: String = build_output_filename(input_filename, output_filename, &method);
+    let (output_filename, image_format) = build_output_filename(input_filename, output_filename, &method);
     println!("\tOutput: {} -> {}", method, output_filename);
     let enhanced_image = rgb_image.auto_white_balance(&method);
-    image::DynamicImage::ImageRgb8(enhanced_image).save(&Path::new(&output_filename)).unwrap();
+    image::DynamicImage::ImageRgb8(enhanced_image).save(&Path::new(&output_filename).unwrap();
 }
 
 fn filename_has_extension(filename: &str) -> bool {
