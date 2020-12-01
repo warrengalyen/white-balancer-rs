@@ -1,20 +1,20 @@
 use image;
 use image::Pixel;
-use ::image_ext::PixelMath;
 use ::math::scale::scale_pixel;
+use ::image_ext::PixelStats;
 
 pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
     let (width, height) = image.dimensions();
     let mut out = image::RgbImage::new(width, height);
 
-    let rgb_max = image.max_per_channel();
+    let rgb_max = image.max();
 
     for (old_pixel, new_pixel) in image.pixels().zip(out.pixels_mut()) {
         let channels = old_pixel.channels();
         *new_pixel = image::Rgb([
-            scale_pixel(channels[0], rgb_max.1 as f32, rgb_max.0 as f32),
+            scale_pixel(channels[0], rgb_max[1] as f32, rgb_max[0] as f32),
             channels[1],
-            scale_pixel(channels[2], rgb_max.1 as f32, rgb_max.2 as f32)
+            scale_pixel(channels[2], rgb_max[1] as f32, rgb_max[2] as f32)
         ]);
     }
 
@@ -25,7 +25,6 @@ pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
 mod test {
     use super::*;
     use rand::{thread_rng, Rng};
-    use test::Bencher;
 
     #[test]
     fn test_equal_resolution() {
@@ -50,20 +49,5 @@ mod test {
                 assert_eq!(orig_p, white_p);
             }
         }
-    }
-
-    #[bench]
-    fn bench_retinex_hd_image(b: &mut Bencher) {
-        let frame_size = 1920 * 1080 * 3;
-        let mut data = vec![0x00; frame_size];
-        thread_rng().fill_bytes(&mut data);
-        let x = image::RgbImage::from_vec(
-            1920, 1080, data).unwrap();
-
-        // On Mac Mini:
-        // 19,383,469 ns/iter
-        b.iter(|| {
-            auto_white_balance(&x);
-        });
     }
 }

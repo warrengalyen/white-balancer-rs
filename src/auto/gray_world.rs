@@ -3,21 +3,21 @@ use image::Rgb;
 use image::Pixel;
 
 use ::math::scale::{scale_pixel};
-use ::image_ext::PixelMath;
+use ::image_ext::PixelStats;
 
 pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
     let (width, height) = image.dimensions();
     let mut output_image = image::RgbImage::new(width, height);
-    let avg = image.avg_per_channel();
+    let mean = image.mean();
 
     for (old_pixel, new_pixel) in image.pixels()
             .zip(output_image.pixels_mut()) {
         let channels = old_pixel.channels();
 
         *new_pixel = Rgb([
-            scale_pixel(channels[0], avg.1, avg.0),
+            scale_pixel(channels[0], mean[1], mean[0]),
             channels[1],
-            scale_pixel(channels[2], avg.1, avg.2)
+            scale_pixel(channels[2], mean[1], mean[2])
         ]);
     }
 
@@ -27,7 +27,6 @@ pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
 #[cfg(test)]
 mod gray_test {
     use super::*;
-    use test::Bencher;
     use rand::{thread_rng, Rng};
 
     #[test]
@@ -91,18 +90,5 @@ mod gray_test {
                 assert_eq!(white_p, exp_p);
             }
         }
-    }
-
-    #[bench]
-    fn bench_gray_world_hd_image(b: &mut Bencher) {
-        let frame_size = 1920 * 1080 * 3;
-        let mut data = vec![0x00; frame_size];
-        thread_rng().fill_bytes(&mut data);
-        let x = image::RgbImage::from_vec(
-            1920, 1080, data).unwrap();
-
-        b.iter(|| {
-            auto_white_balance(&x);
-        });
     }
 }

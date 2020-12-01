@@ -8,6 +8,9 @@ use self::nalgebra::Matrix2;
 
 use ::image_ext::PixelMath;
 
+use rand::Rng;
+use rand::thread_rng;
+
 fn resolve_matrix(a: Matrix2<f32>, c1: f32, c2: f32) -> (f32, f32) {
     let det = a.determinant();
     if det == 0f32 {
@@ -66,18 +69,5 @@ pub fn auto_white_balance(image: &image::RgbImage) -> image::RgbImage {
 mod test {
     use super::*;
     use rand::{thread_rng, Rng};
-    use test::Bencher;
 
-    #[bench]
-    fn bench_retinex_hd_image(b: &mut Bencher) {
-        let frame_size = 1920 * 1080 * 3;
-        let mut data = vec![0x00; frame_size];
-        thread_rng().fill_bytes(&mut data);
-        let x = image::RgbImage::from_vec(
-            1920, 1080, data).unwrap();
-
-        b.iter(|| {
-            auto_white_balance(&x);
-        });
-    }
 }
