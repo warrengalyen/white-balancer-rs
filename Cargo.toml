@@ -15,5 +15,6 @@ image = "0.23.12"
 nalgebra = "0.23.1"
 num = "0.3.1"
 num-traits = "0.2.14"
+rand = "0.7.3"
 
 

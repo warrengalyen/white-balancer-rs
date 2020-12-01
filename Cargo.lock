@@ -605,6 +605,7 @@ dependencies = [
  "nalgebra",
  "num",
  "num-traits",
+ "rand",
 ]
 
 [[package]]
